@@ -5,8 +5,9 @@ import "./ERC721.sol";                              //#dev -- explanaition
 contract BorsettaTitle is ERC721 {                  //#map -- key : value (pair)
                                                     //#param -- variable            
     //#dev limits length of titleId to 16 digits    //#move? -- place c in new contract file
-    uint idModulus = 10 ** 16;
-    
+    uint256 idModulus = 10 ** 16;
+    uint256 totalTitles = borsettaTitles.length();
+
     struct DiamondTitle {
         //#!variables will be revised shortly
         uint256 id; //#paramhash id generated from xyz
@@ -29,6 +30,8 @@ contract BorsettaTitle is ERC721 {                  //#map -- key : value (pair)
     mapping (address => uint256[]) private ownedTitles;
     //#map titleId : owneTitles[index]
     mapping (uint256 => uint256) private ownedTitlesIndex;    
+    // Mapping from token ID to approved address
+    mapping (uint256 => address) private titleApprovals;
 
     event TitleMinted(uint id, uint date, uint weight, uint quality, string labName);
     //#TBD event TitleDataVerified(); -- ?one event for all _verify functions?  
@@ -36,7 +39,12 @@ contract BorsettaTitle is ERC721 {                  //#map -- key : value (pair)
     //#TBD event OperatorAuthorized(address indexed operator, address indexed owner);
     event TitleTransfer(address indexed from, address indexed to, uint256 tokens);
     event Approval(address indexed from, address indexed to, uint256 indexed deedId);
-    
+    event Delegation(address indexed _owner, address indexed _operator); 
+
+    modifier onlyOwnerOf(uint256 _id) {
+        require(ownerOf(_id) == msg.sender);
+        _;
+    }
     //#dev mints new title with originator specified data
     //#dev set id to uint256 version of result of sha3(_date, _weight, _quality)
     //#dev _date is set to current block height
@@ -50,7 +58,11 @@ contract BorsettaTitle is ERC721 {                  //#map -- key : value (pair)
         ownedTitlesIndex[id] = _ownedTitlesIndex;
         TitleMinted(id, _date, _weight, _quality, _labName);
     }
-    
+
+    //#dev assigns an authorized operator
+    function delegate(address _delegate) external {
+
+    }    
     //#move? cross references orignator input against test lab data, quantifies and lists discrepencies
     /**#move?
 
@@ -121,18 +133,83 @@ contract BorsettaTitle is ERC721 {                  //#map -- key : value (pair)
       return ownedTitles[_owner][_index];
   }
 
-  //#TBD function approve(address _to, uint256 _id) external payable {
+  function approvedFor(uint256 _id) public view returns (address) {
+    return titleApprovals[_id];
+  }
 
+  function approve(address _to, uint256 _id) public onlyOwnerOf(_id) {
+    address owner = ownerOf(_id);
+    require(_to != owner);
+    if (approvedFor(_id) != 0 || _to != 0) {
+      titleApprovals[_id] = _to;
+      Approval(owner, _to, _id);
+    }
+  }
 
-  //}
-
+  function isApprovedFor(address _owner, uint256 _id) internal view returns (bool) {
+    return approvedFor(_id) == _owner;
+  }
   //#TBD function takeOwnership(uint256 _id) external payable {
 
 
   //}
 
-  //#TBD function transfer(address _to, uint256 _id) external payable {
+  function transfer(address _to, uint256 _id) public onlyOwnerOf(_id) {
+    clearApprovalAndTransfer(msg.sender, _to, _id);
+  }
 
+  function takeOwnership(uint256 _id) public {
+    require(isApprovedFor(msg.sender, _id));
+    clearApprovalAndTransfer(ownerOf(_id), msg.sender, _id);
+  }
+
+  function clearApprovalAndTransfer(address _from, address _to, uint256 _id) internal {
+    require(_to != address(0));
+    require(_to != ownerOf(_id));
+    require(ownerOf(_id) == _from);
+
+    clearApproval(_from, _id);
+    removeToken(_from, _id);
+    addToken(_to, _id);
+    Transfer(_from, _to, _id);
+  }
+
+  function clearApproval(address _owner, uint256 _id) private {
+    require(ownerOf(_id) == _owner);
+    titleApprovals[_id] = 0;
+    Approval(_owner, 0, _id);
+  }
+
+  function addToken(address _to, uint256 _id) private {
+    require(titleToOwner[_id] == address(0));
+    titleToOwner[_id] = _to;
+    uint256 length = balanceOf(_to);
+    ownedTitles[_to].push(_id);
+    ownedTitlesIndex[_id] = length;
+    totalTitles = totalTitles.add(1);
+  }
+
+  function removeToken(address _from, uint256 _id) private {
+    require(ownerOf(_id) == _from);
+
+    uint256 index = ownedTitlesIndex[_id];
+    uint256 lastindex = balanceOf(_from).sub(1);
+    uint256 lastToken = ownedTitles[_from][lastindex];
+
+    titleToOwner[_id] = 0;
+    ownedTitles[_from][index] = lastToken;
+    ownedTitles[_from][lastindex] = 0;
+    // Note that this will handle single-element arrays. In that case, both index and lastindex are going to
+    // be zero. Then we can make sure that we will remove _id from the ownedTokens list since we are first swapping
+    // the lastToken to the first position, and then dropping the element placed in the last position of the list
+
+    ownedTitles[_from].length--;
+    ownedTitlesIndex[_id] = 0;
+    ownedTitlesIndex[lastToken] = index;
+    totalTitles = totalTitles.sub(1);
+  }
+  
+  //#TBD function supportsInterface(bytes4 interfaceID) external view returns (bool) {
 
   //}
 }
