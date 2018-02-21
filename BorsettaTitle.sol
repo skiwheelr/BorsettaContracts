@@ -6,7 +6,7 @@ contract BorsettaTitle is ERC721 {                      //#map -- key : value (p
                                                         //#param -- variable            
     //#notice limits length of titleId to 16 digits     //#move? -- place c in new contract file
     uint256 internal idModulus = 10 ** 16;              //#dev issue/task explanation/question
-    uint256 private totalTitles = borsettaTitles.length();
+    uint256 private totalTitles = 0;
 
     struct DiamondTitle {
         //#! variables will be revised shortly
@@ -15,7 +15,6 @@ contract BorsettaTitle is ERC721 {                      //#map -- key : value (p
         uint8 weight; //#param y
         uint8 quality; //#param z
         string labName;
-        
     }
     
     DiamondTitle[] public borsettaTitles;
@@ -33,6 +32,8 @@ contract BorsettaTitle is ERC721 {                      //#map -- key : value (p
     mapping (uint256 => address) private titleApprovals;
     //#map titleId : approvedOperator
     mapping (uint256 => address) private titleOperator;
+    //#map titleId : testLab (name/id)
+    mapping (uint256 => address) private titleTestLab;
 
     event TitleMinted(uint id, uint date, uint weight, uint quality, string labName);
     //#TBD event TitleDataVerified(); -- ?one event for all _verify functions?  
@@ -47,35 +48,49 @@ contract BorsettaTitle is ERC721 {                      //#map -- key : value (p
         _;
     }
 
-     modifier onlyOperator(uint256 _id) {
+    modifier onlyOperator(uint256 _id) {
         require(operatorOf(_id) == msg.sender);
+        _;
+    }
+
+    modifier onlyTestLab(uint256 _id) {
+        require(testLabOf(_id) == msg.sender);
         _;
     }
     //#notice mints new title with originator specified data
     //#param sets id to uint256 version of result of sha3(_date, _weight, _quality)
     //#param _date is set to current block height
     function _mintTitle(uint8 _weight, uint8 _quality, string _labName) private {
-        uint256 _date = block.height;
-        uint256 id = uint256(sha3(_date, _weight, _quality)) % idModulus;
+        uint256 _date = block.timestamp;
+        uint256 id = uint256(keccak256(_date, _weight, _quality)) % idModulus;
         uint index = borsettaTitles.push(DiamondTitle(id, _date, _weight, _quality, _labName)) - 1;
         titleIdIndex[id] = index;
         titleToOwner[id] = msg.sender;
         uint _ownedTitlesIndex = ownedTitles[msg.sender].push(id) - 1;
         ownedTitlesIndex[id] = _ownedTitlesIndex;
+        totalTitles++;
         TitleMinted(id, _date, _weight, _quality, _labName);
     }
 
     //#notice assigns an authorized operator
-    function delegateOperator(address _operator) external {
-
-    }    
+    function delegateOperator(address _operator, address _owner, uint256 _id) public onlyOwnerOf(_id) {
+        require(_operator != address(0));
+        titleOperator[_id] = _operator;
+        Delegation(_owner, _operator);
+    }
+    //#notice assigns an authorized test lab
+    function delegateTestLab(address _testLab, address _owner, uint256 _id) public onlyOwnerOf(_id) {
+        require(_testLab != address(0));
+        titleTestLab[_id] = _testLab;
+        Delegation(_owner, _testLab);
+    }
     //#move? cross references orignator input against test lab data, quantifies and lists discrepencies
     /**#move?
 
     #dev the TestLab contract will use these functions to check/update diamond data
     #dev will be revised to match appropriate variables
 
-    function _verifyWeight(uint256 id, uint _weight) public;
+    function _verifyWeight(uint256 id, uint _weight) onlyTestLab internal {
         If (borsettaTitles[id][weight] != _weight) {
             borsettaTitles[id][weightDiscrepency] = borsettaTitles[id][weight] - _weight;
             borsettaTitles[id][weight] = _weight;
@@ -83,23 +98,27 @@ contract BorsettaTitle is ERC721 {                      //#map -- key : value (p
         return;
     }
 
-    function _verifyColor(uint256 id, uint _quality) {
+    function _verifyColor(uint256 id, uint _quality) onlyTestLab internal {
         If (borsettaTitles[id][quality] != _quality) {
             borsettaTitles[id][qualityDiscrepency] = borsettaTitles[id][quality] - _quality;
             borsettaTitles[id][quality] = _quality;
         }
         return;
     
-    function _verifyETC(etcetc) {
+    function _verifyETC(etcetc) onlyTestLab internal {
         if (etcetc) {
 
         }
-    }
+    
     }
     
     #notice function to allow external operators contracts to track possesion data
 
-    function _trackPossesion(string _operatorName) {
+    function _trackHandling(string _name) onlyHandler internal {
+        
+    }
+    
+    function _trackVault(string _name) onylVault internal {
 
     }
     */
@@ -125,21 +144,29 @@ contract BorsettaTitle is ERC721 {                      //#map -- key : value (p
       require(operator != address(0));
       return operator;
   }
+  //#notice returns test lab of titleId
+  function testLabOf(uint256 _id) public view returns (address) {
+      address testLab = titleTestLab[_id];
+      require(testLab != address(0));
+      return testLab;
+  }
   //#notice returns number of titles total
-  function countOfTitles() external view returns (uint256 _count) {
-      return borsettaTitles.length();
+  function countOfTitles() public view returns (uint256 _count) {
+      return totalTitles;
   }
   //#notice returns number of titles held by owner
-  function countOfTitlesByOwner(address _owner) external view returns (uint256 _count) {
+  function countOfTitlesByOwner(address _owner) public view returns (uint256 _count) {
       require(_owner != address(0));
-      return ownedTitles[_owner].length();
+      return ownedTitles[_owner].length;
   }
   //#notice returns titleId of a given adress by index (0 = 1st item in owndedTitles[address])
   //#dev does not use titleId because ownedTitles is mapping of an address to an array
   //#dev not a mapping of address to mapping. Using a nested mapping would allow us to replace the 
   //#dev index with a key which we would set to the titleID.
   //#dev However, I do not know if using a nested mapping here would be best or not.
-  function titleOfOwnerByIndex(address _owner, uint256 _index) external view returns (uint256 _deedId) {
+  function titleOfOwnerByIndex(address _owner, uint256 _index) external view returns (uint256 _id) {
+    //  if (_index >= countOfTitlesByOwner(_owner)) {
+      //    throw;}
       require(_index <= countOfTitlesByOwner(_owner));
       require(_owner != address(0));
       return ownedTitles[_owner][_index];
@@ -198,14 +225,14 @@ contract BorsettaTitle is ERC721 {                      //#map -- key : value (p
     uint256 length = balanceOf(_to);
     ownedTitles[_to].push(_id);
     ownedTitlesIndex[_id] = length;
-    totalTitles = totalTitles.add(1);
+    totalTitles = totalTitles++;
   }
 
   function removeToken(address _from, uint256 _id) private {
     require(ownerOf(_id) == _from);
 
     uint256 index = ownedTitlesIndex[_id];
-    uint256 lastindex = balanceOf(_from).sub(1);
+    uint256 lastindex = balanceOf(_from) - 1;
     uint256 lastToken = ownedTitles[_from][lastindex];
 
     titleToOwner[_id] = 0;
@@ -218,7 +245,7 @@ contract BorsettaTitle is ERC721 {                      //#map -- key : value (p
     ownedTitles[_from].length--;
     ownedTitlesIndex[_id] = 0;
     ownedTitlesIndex[lastToken] = index;
-    totalTitles = totalTitles.sub(1);
+    totalTitles = totalTitles - 1;
   }
   //#TBD function supportsInterface(bytes4 interfaceID) external view returns (bool) {
 
