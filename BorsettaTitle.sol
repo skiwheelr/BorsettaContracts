@@ -6,7 +6,7 @@ contract BorsettaTitle is ERC721 {                      //#map -- key : value (p
                                                         //#param -- variable            
     //#notice limits length of titleId to 16 digits     //#move? -- place c in new contract file
     uint256 internal idModulus = 10 ** 16;              //#dev issue/task explanation/question
-    uint256 private totalTitles = 0;
+    uint256 private totalTitles = countOfTitles();
 
     struct DiamondTitle {
         //#! variables will be revised shortly
@@ -20,20 +20,20 @@ contract BorsettaTitle is ERC721 {                      //#map -- key : value (p
     DiamondTitle[] public borsettaTitles;
     //#notice here titleID is mapped to the index of that title in borsettaTitles array    
     //#param titleId is a sha3 hash generated from xyz
-    //#map titleId : bosettaTitles[_index];
-    mapping (uint256 => uint) private titleIdIndex;
+    //#map titleId : bosettaTitles[index];
+    mapping (uint256 => uint) public idToIndex;
     //#map titleId : address
-    mapping (uint256 => address) internal titleToOwner;
+    mapping (uint256 => address) public titleToOwner;
     //#map adress : list of owned tokes
-    mapping (address => uint256[]) private ownedTitles;
+    mapping (address => uint256[]) public ownedTitles;
     //#map titleId : owneTitles[index]
-    mapping (uint256 => uint256) private ownedTitlesIndex;    
+    mapping (uint256 => uint256) public ownedTitlesIndex;    
     //#map titleID : approved address
-    mapping (uint256 => address) private titleApprovals;
+    mapping (uint256 => address) public titleApprovals;
     //#map titleId : approvedOperator
-    mapping (uint256 => address) private titleOperator;
+    mapping (uint256 => address) public titleOperator;
     //#map titleId : testLab (name/id)
-    mapping (uint256 => address) private titleTestLab;
+    mapping (uint256 => address) public titleTestLab;
 
     event TitleMinted(uint id, uint date, uint weight, uint quality, string labName);
     //#TBD event TitleDataVerified(); -- ?one event for all _verify functions?  
@@ -60,15 +60,16 @@ contract BorsettaTitle is ERC721 {                      //#map -- key : value (p
     //#notice mints new title with originator specified data
     //#param sets id to uint256 version of result of sha3(_date, _weight, _quality)
     //#param _date is set to current block height
-    function _mintTitle(uint8 _weight, uint8 _quality, string _labName) private {
+    function _mintTitle(uint8 _weight, uint8 _quality, string _labName) public {
         uint256 _date = block.timestamp;
         uint256 id = uint256(keccak256(_date, _weight, _quality)) % idModulus;
         uint index = borsettaTitles.push(DiamondTitle(id, _date, _weight, _quality, _labName)) - 1;
-        titleIdIndex[id] = index;
-        titleToOwner[id] = msg.sender;
-        uint _ownedTitlesIndex = ownedTitles[msg.sender].push(id) - 1;
-        ownedTitlesIndex[id] = _ownedTitlesIndex;
-        totalTitles++;
+        idToIndex[id] = index;
+        //titleToOwner[index] = msg.sender;
+        //uint _ownedTitlesIndex = ownedTitles[msg.sender].push(id) - 1;
+        //ownedTitles[msg.sender].push(id);
+        //ownedTitlesIndex[id] = _ownedTitlesIndex;
+        addToken(msg.sender, id); //#dev used in place of above statements
         TitleMinted(id, _date, _weight, _quality, _labName);
     }
 
@@ -152,7 +153,7 @@ contract BorsettaTitle is ERC721 {                      //#map -- key : value (p
   }
   //#notice returns number of titles total
   function countOfTitles() public view returns (uint256 _count) {
-      return totalTitles;
+      return borsettaTitles.length;
   }
   //#notice returns number of titles held by owner
   function countOfTitlesByOwner(address _owner) public view returns (uint256 _count) {
