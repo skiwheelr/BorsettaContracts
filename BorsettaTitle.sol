@@ -60,7 +60,8 @@ contract BorsettaTitle is ERC721 {                      //#map -- key : value (p
     //#notice mints new title with originator specified data
     //#param sets id to uint256 version of result of sha3(_date, _weight, _quality)
     //#param _date is set to current block height
-    function _mintTitle(uint8 _weight, uint8 _quality, string _labName) public {
+    function _mintTitle(address _to, uint8 _weight, uint8 _quality, string _labName) public {
+        require(_to != address(0));
         uint256 _date = block.timestamp;
         uint256 id = uint256(keccak256(_date, _weight, _quality)) % idModulus;
         uint index = borsettaTitles.push(DiamondTitle(id, _date, _weight, _quality, _labName)) - 1;
@@ -70,6 +71,7 @@ contract BorsettaTitle is ERC721 {                      //#map -- key : value (p
         //ownedTitles[msg.sender].push(id);
         //ownedTitlesIndex[id] = _ownedTitlesIndex;
         addToken(msg.sender, id); //#dev used in place of above statements
+        transfer(_to, id);
         TitleMinted(id, _date, _weight, _quality, _labName);
     }
 
