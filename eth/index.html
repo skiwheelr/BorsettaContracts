@@ -1,0 +1,26 @@
+<html>
+        <head>
+        <h1>BorsettaTroll</h1>
+        <script src="web3.min.js"></script>
+        </head>
+    <body>
+You're balance is 1000 wei!
+<script>
+    if(typeof web3 !== "undefined") {
+        console.log("Web 3 found!");
+        web3 = new Web3(web3.currentProvider);
+        web3.eth.getAccounts(function(e, accounts){
+            var firstAccount = accounts[0];
+            console.log(firstAccount);
+
+            web3.eth.getBalance(firstAccount, function(e, balance){
+                document.getElementById("balanceLabel").innerHTML = "My Ethereum balance is " + balance + " Wei.";
+            });
+        });
+    }
+    else {
+        alert("Couldn't find provider.");
+    }
+    </script>
+    </body>
+</html>
