@@ -27,11 +27,8 @@ contract BorsettaSupplyChain is BorsettaTitle {
     }
 
 /**
-* @dev compares manufacturer diamond attributes to testLab diamond attributes
-* @dev creates a metadata hash (proof) used to verify off data stored off-chain
+* @dev take input from testLab and creates a metadata hash (proof) used to verify off data stored off-chain
 * @dev stores proof in title struct
-* @todo change to three seperate functions (weightDiscrepency, qualityDiscrepency, colorDiscrepency) 
-*  that takes in _discrency arguments and creates individual proofs for each attribute
 * @param _titleId represents ID of working title
 * @param _accessKey represents bytes32 hash of working title accessKey
 * @param _weightDiscrepency uint8 representing testLab input for weightDiscrepency -- use 0 when manufacture input is accurate
