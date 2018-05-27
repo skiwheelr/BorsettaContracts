@@ -1,3 +1,2 @@
-ERC721Token.sol is going to be renamed Borsetta.sol
-fromTokenToTitle.sol is experimental renaming of all functions, variables, and parameters from token to title for readability's sake... yay vscode. 
+fromTokenToTitle.sol is experimental renaming of all functions, variables, and parameters in BorsettaTitle.sol from token to title for readability's sake... yay vscode. Must be done for ERC721BasicToken.sol as well. </br>
 Will copy contents into Borsetta.sol/ERC721Token.sol when after testing.
