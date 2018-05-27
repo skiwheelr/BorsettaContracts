@@ -205,9 +205,9 @@ contract BorsettaTitle is ERC721, ERC721BasicToken {
   * @param _tokenId uint256 ID of working title
   * @param _accessKey bytes32 accessKey used to control supply chain stakeholder access
   */
-    function _setAccessKey(uint256 _tokenId,  bytes32 _accessKey) internal {
+    function _setAccessKey(uint256 _tokenId,  uint256 _accessKey) internal {
         uint256 index = borsettaTitlesIndex[_tokenId];
-        borsettaTitles[index].accessKey = _accessKey;
+        borsettaTitles[index].accessKey = keccak256(_accessKey);
     }
 
   /**

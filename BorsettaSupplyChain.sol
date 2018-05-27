@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-import "./ERC721Token.sol";
+import "./BorsettaTitle.sol";
 
 contract BorsettaSupplyChain is BorsettaTitle {
 
@@ -16,7 +16,7 @@ contract BorsettaSupplyChain is BorsettaTitle {
 
     function verifyWeight(uint256 _titleId, bytes32 _accessKey, uint8 _weight, uint8 _quality, uint8 _color) 
      internal accessGranted(_titleId, _accessKey) {
-         
+
         uint index = borsettaTitlesIndex[_titleId];
         if (_weight != borsettaTitles[index].weight) {
             uint8 weightDiscrepency = borsettaTitles[index].weight - _weight;
@@ -38,13 +38,13 @@ contract BorsettaSupplyChain is BorsettaTitle {
     }
 
 
-    function diamondTransport(uint256 _titleId, uint256 _accessKey) internal accessGranted(_titleId, _accessKey) {
+    function diamondTransport(uint256 _titleId, bytes32 _accessKey) internal accessGranted(_titleId, _accessKey) {
         bytes32 _proof = keccak256(0);
         
         emit transportation(msg.sender, _proof, _titleId);
     }
 
-    function diamondVaultStorage(uint256 _titleId, uint256 _accessKey) internal accessGranted(_titleId, _accessKey) {
+    function diamondVaultStorage(uint256 _titleId, bytes32 _accessKey) internal accessGranted(_titleId, _accessKey) {
         bytes32 _proof = keccak256(0);
         
         emit vaultStorage(msg.sender, _proof, _titleId);
