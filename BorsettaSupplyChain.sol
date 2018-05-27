@@ -34,35 +34,23 @@ contract BorsettaSupplyChain is BorsettaTitle {
 *  that takes in _discrency arguments and creates individual proofs for each attribute
 * @param _titleId represents ID of working title
 * @param _accessKey represents bytes32 hash of working title accessKey
-* @param _weight uint8 representing testLab input for weight
-* @param _quality uint8 representing testLab input for quality
-* @param _color uint8 representing testLab input for color
+* @param _weightDiscrepency uint8 representing testLab input for weightDiscrepency -- use 0 when manufacture input is accurate
+* @param _qualityDiscrepency uint8 representing testLab input for qualityDiscrepency -- use 0 when manufacture input is accurate
+* @param _colorDiscrepency uint8 representing testLab input for colorDiscrepency -- use 0 when manufacture input is accurate
  */
-    function verifyAttributes(
+    function discrepenciesProof(
         uint256 _titleId, 
         bytes32 _accessKey, 
-        uint8 _weight, 
-        uint8 _quality, 
-        uint8 _color
-        )  internal accessGranted(_titleId, _accessKey) {
-
-        uint index = borsettaTitlesIndex[_titleId];
-        if (_weight != borsettaTitles[index].weight) {
-            uint8 weightDiscrepency = borsettaTitles[index].weight - _weight;
-        } else {weightDiscrepency = 0;}
-
-        if (_quality != borsettaTitles[index].quality) {
-            uint8 qualityDiscrepency = borsettaTitles[index].quality - _quality;
-        } else {qualityDiscrepency = 0;}
-
-        if (_color != borsettaTitles[index].color) {
-            uint8 colorDiscrepency = borsettaTitles[index].color - _color;
-        } else {colorDiscrepency = 0;}
-
-        bytes32 _proof = keccak256(weightDiscrepency, qualityDiscrepency, colorDiscrepency);
-
-        borsettaTitles[index].discrepencyProofs.push(_proof);
+        uint8 _weightDiscrepency, 
+        uint8 _qualityDiscrepency, 
+        uint8 _colorDiscrepency
+    ) internal  accessGranted(_titleId, _accessKey) {
+      //solium prevent arg-line overflow
+        bytes32 _proof = keccak256(_weightDiscrepency, _qualityDiscrepency, _colorDiscrepency);
         
+        uint index = borsettaTitlesIndex[_titleId];
+        borsettaTitles[index].discrepencyProofs.push(_proof);
+
         emit testLabVerification(msg.sender, _proof, _titleId);
     }
 
@@ -76,7 +64,7 @@ contract BorsettaSupplyChain is BorsettaTitle {
 * @param _endCoordinates uint256 represents gps coordinates of end location
 * @param _elapsedTime uint256 represents total time used to transport diamond
  */
-    function diamondTransport(
+    function transportationProof(
         uint256 _titleId, 
         bytes32 _accessKey, 
         string _transportName, 
@@ -102,7 +90,7 @@ contract BorsettaSupplyChain is BorsettaTitle {
 * @param _vaultAddress represents address of vault
 * @param _date uint256 represents date and time of vault recieving diamond
  */
-    function diamondVaultStorage(
+    function vaultStorageProof(
         uint256 _titleId, 
         bytes32 _accessKey, 
         string _vaultName, 
