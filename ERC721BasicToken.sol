@@ -113,10 +113,10 @@ contract ERC721BasicToken is ERC721Basic {
    * @param _to operator address to set the approval
    * @param _approved representing the status of the approval to be set
    */
-    function setApprovalForAll(address _to, bool _approved) public {
-        require(_to != msg.sender);
-        operatorApprovals[msg.sender][_to] = _approved;
-        emit ApprovalForAll(msg.sender, _to, _approved);
+    function setApprovalForAll(address _operator, bool _approved) public {
+        require(_operator != msg.sender);
+        operatorApprovals[msg.sender][_operator] = _approved;
+        emit ApprovalForAll(msg.sender, _operator, _approved);
     }
 
   /**
