@@ -168,6 +168,7 @@ contract BorsettaTitle is ERC721, ERC721BasicToken {
   /**
    * @dev Internal function to mint a new token
    * @dev Reverts if the given token ID already exists
+   * @dev called by front end at same time as _setDL(), _setWQC(), and _setAccessKey()
    * @param _to address the beneficiary that will own the minted token
    * @param _tokenId uint256 ID of the token to be minted by the msg.sender
    * @param _date string date of diamond cultivation
@@ -177,18 +178,39 @@ contract BorsettaTitle is ERC721, ERC721BasicToken {
         super._mint(_to, _tokenId);
 
         uint length = borsettaTitles.length;
+
         borsettaTitles[length].id = _tokenId;
-        borsettaTitles[length].date = _date; 
-        borsettaTitles[length].labName = _labName;
+
         borsettaTitlesIndex[_tokenId] = length;
 
         allTokensIndex[_tokenId] = allTokens.length;
         allTokens.push(_tokenId);
+
+        addTokenTo(_to, _tokenId);
+    }
+
+  /**
+  * @dev Internal function to assign title cultivation date and lab (manufacturer) name 
+  * @dev Reverts if title id is invalid -- feature to be added
+  * @dev called by front end at same time as _mint()
+  * @param _tokenId uint256 ID of the token to be minted by the msg.sender  
+  * @param _date string represeting date of diamnond cultivation
+  * @param _labName string  representing lab (manufacturer) name
+  */
+    function _setDL(uint256 _tokenId, string _date, string _labName) internal {
+        uint length = borsettaTitles.length;
+
+        borsettaTitles[length].date = _date; 
+        borsettaTitles[length].labName = _labName;
+
+        borsettaTitlesIndex[_tokenId] = length;
     }
 
   /**
   * @dev Internal function to assign title weight, quality, and color variables
   * @dev Reverts if title id is invalid -- feature to be added
+  * @dev called by front end at same time as _mint()
+  * @param _tokenId uint256 ID of the token to be minted by the msg.sender  
   * @param _weight uint8 represeting diamond weight
   * @param _quality uint8 representing diamond quality value
   * @param _color string representing diamond color 
@@ -202,6 +224,7 @@ contract BorsettaTitle is ERC721, ERC721BasicToken {
 
   /** 
   * @dev internal function to assign accessKey to title
+  * @dev called by front end at same time as _mint()
   * @param _tokenId uint256 ID of working title
   * @param _accessKey bytes32 accessKey used to control supply chain stakeholder access
   */
