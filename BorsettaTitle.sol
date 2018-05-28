@@ -20,9 +20,9 @@ contract BorsettaTitle is ERC721, ERC721BasicToken {
         uint8 weight; 
         uint8 quality; 
         uint8 color;
-        bytes32[] discrepencyProofs;
-        bytes32[] transportationProofs;
-        bytes32[] vaultStorageProofs;
+        mapping(string => bytes32) discrepencyProofs;
+        mapping(string => bytes32) transportationProofs;
+        mapping(string => bytes32) vaultStorageProofs;
         bytes32 accessKey;
     }  
   

@@ -38,6 +38,7 @@ contract BorsettaSupplyChain is BorsettaTitle {
     function discrepenciesProof(
         uint256 _titleId, 
         bytes32 _accessKey, 
+        string _key,
         uint8 _weightDiscrepency, 
         uint8 _qualityDiscrepency, 
         uint8 _colorDiscrepency
@@ -46,7 +47,7 @@ contract BorsettaSupplyChain is BorsettaTitle {
         bytes32 _proof = keccak256(_weightDiscrepency, _qualityDiscrepency, _colorDiscrepency);
         
         uint index = borsettaTitlesIndex[_titleId];
-        borsettaTitles[index].discrepencyProofs.push(_proof);
+        borsettaTitles[index].discrepencyProofs[_key] = _proof;
 
         emit testLabVerification(msg.sender, _proof, _titleId);
     }
@@ -64,6 +65,7 @@ contract BorsettaSupplyChain is BorsettaTitle {
     function transportationProof(
         uint256 _titleId, 
         bytes32 _accessKey, 
+        string _key,
         string _transportName, 
         uint256 _startCoordinates, 
         uint256 _endCoordinates,
@@ -73,7 +75,7 @@ contract BorsettaSupplyChain is BorsettaTitle {
         bytes32 _proof = keccak256(_transportName, _startCoordinates, _endCoordinates, _elapsedTime);
         
         uint index = borsettaTitlesIndex[_titleId];
-        borsettaTitles[index].transportationProofs.push(_proof);
+        borsettaTitles[index].transportationProofs[_key] = _proof;
 
         emit transportation(msg.sender, _proof, _titleId);
     }
@@ -90,6 +92,7 @@ contract BorsettaSupplyChain is BorsettaTitle {
     function vaultStorageProof(
         uint256 _titleId, 
         bytes32 _accessKey, 
+        string _key,
         string _vaultName, 
         string _vaultAddress,
         uint256 _date
@@ -98,7 +101,7 @@ contract BorsettaSupplyChain is BorsettaTitle {
         bytes32 _proof = keccak256(_vaultName, _vaultAddress, _date);
 
         uint index = borsettaTitlesIndex[_titleId];
-        borsettaTitles[index].vaultStorageProofs.push(_proof);
+        borsettaTitles[index].vaultStorageProofs[_key] = _proof;
         
         emit vaultStorage(msg.sender, _proof, _titleId);
     }
