@@ -53,6 +53,28 @@ contract BorsettaTitle is ERC721, ERC721BasicToken {
   // Optional mapping for title URIs
     mapping(uint256 => string) internal tokenURIs;
 
+    /**
+    * @dev modifier confirms token exists before running function to ensure new title is not accidently created
+    * @dev throws if _titleId does not exist
+    * @param _titleId represents ID of working title
+    */
+    modifier tokenExists(uint256 _titleId) {
+        require(exists(_titleId) == true);
+        _;
+    }
+
+    /**
+    * @dev modifier grants access to parties with correct access key stored on rfid/diamond nanotech tracking device
+    * @dev throws if accessKey does not match 
+    * @param _titleId represents ID of working title
+    * @param _accessKey represents bytes32 hash of working title accessKey
+    */
+    modifier accessGranted(uint256 _titleId, bytes32 _accessKey) {
+        uint index = borsettaTitlesIndex[_titleId];
+        require(_accessKey == borsettaTitles[index].accessKey);
+        _;
+    }
+
   /**
    * @dev Constructor function
    * @dev Called once when contract is iniated
@@ -197,7 +219,7 @@ contract BorsettaTitle is ERC721, ERC721BasicToken {
   * @param _date string represeting date of diamnond cultivation
   * @param _labName string  representing lab (manufacturer) name
   */
-    function _setDL(uint256 _tokenId, string _date, string _labName) internal {
+    function _setDL(uint256 _tokenId, string _date, string _labName) internal tokenExists(_tokenId) {
         uint length = borsettaTitles.length;
 
         borsettaTitles[length].date = _date; 
@@ -215,7 +237,7 @@ contract BorsettaTitle is ERC721, ERC721BasicToken {
   * @param _quality uint8 representing diamond quality value
   * @param _color string representing diamond color 
   */
-    function _setTitleWQC(uint256 _tokenId, uint8 _weight, uint8 _quality, uint8 _color) internal {
+    function _setTitleWQC(uint256 _tokenId, uint8 _weight, uint8 _quality, uint8 _color) internal tokenExists(_tokenId) {
         uint256 index = borsettaTitlesIndex[_tokenId];
         borsettaTitles[index].weight = _weight;
         borsettaTitles[index].quality = _quality;
@@ -228,7 +250,7 @@ contract BorsettaTitle is ERC721, ERC721BasicToken {
   * @param _tokenId uint256 ID of working title
   * @param _accessKey bytes32 accessKey used to control supply chain stakeholder access
   */
-    function _setAccessKey(uint256 _tokenId,  uint256 _accessKey) internal {
+    function _setAccessKey(uint256 _tokenId,  uint256 _accessKey) internal tokenExists(_tokenId) {
         uint256 index = borsettaTitlesIndex[_tokenId];
         borsettaTitles[index].accessKey = keccak256(_accessKey);
     }
@@ -241,6 +263,7 @@ contract BorsettaTitle is ERC721, ERC721BasicToken {
    */
     function _burn(address _owner, uint256 _tokenId) internal {
         super._burn(_owner, _tokenId);
+        removeTokenFrom(_owner, _tokenId);
   
     // Clear metadata (if any)
         if (bytes(tokenURIs[_tokenId]).length != 0) {
@@ -259,5 +282,5 @@ contract BorsettaTitle is ERC721, ERC721BasicToken {
         allTokensIndex[_tokenId] = 0;
         allTokensIndex[lastToken] = tokenIndex;
     }
-
+    
 }

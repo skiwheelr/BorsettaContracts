@@ -13,18 +13,7 @@ contract BorsettaSupplyChain is BorsettaTitle {
     event testLabVerification(address indexed _testLab, bytes32 _proof, uint256 _titleId);
     event transportation(address indexed _transport, bytes32 _proof, uint256 _titleId);
     event vaultStorage(address indexed _vault, bytes32 _proof, uint256 _titleId);
-
-/**
-* @dev modifier grants access to parties with correct access key stored on rfid/diamond nanotech tracking device
-* @dev throws if accessKey does not match 
-* @param _titleId represents ID of working title
-* @param _accessKey represents bytes32 hash of working title accessKey
- */
-    modifier accessGranted(uint256 _titleId, bytes32 _accessKey) {
-        uint index = borsettaTitlesIndex[_titleId];
-        require(_accessKey == borsettaTitles[index].accessKey);
-        _;
-    }
+    event proofVerification(uint256 _titleId, bool _verification);
 
 /**
 * @dev take input from testLab and creates a metadata hash (proof) used to verify off data stored off-chain
@@ -106,4 +95,33 @@ contract BorsettaSupplyChain is BorsettaTitle {
         emit vaultStorage(msg.sender, _proof, _titleId);
     }
 
+    /**
+    * @dev retrieve discrepency proof by key
+    * @param _titleId represents ID of working title
+    * @param _key represents the key used to store the proof in the discrepencyProofs mapping (key/val pair aka (key => val))
+    * @return bool true if input 
+    * @param _weightDiscrepency uint8 representing testLab input for weightDiscrepency -- use 0 when manufacture input is accurate
+    * @param _qualityDiscrepency uint8 representing testLab input for qualityDiscrepency -- use 0 when manufacture input is accurate
+    * @param _colorDiscrepency uint8 representing testLab input for colorDiscrepency -- use 0 when manufacture input is accurate
+     */
+    function verifyDiscrepency(
+        uint256 _titleId,
+        string _key,
+        uint8 _weightDiscrepency, 
+        uint8 _qualityDiscrepency, 
+        uint8 _colorDiscrepency) 
+        public returns(bool) {
+      //solium prevent arg-line overflow         
+        uint256 index = borsettaTitlesIndex[_titleId];
+
+        bool verification = borsettaTitles[index].discrepencyProofs[_key] == keccak256(
+            _weightDiscrepency, 
+            _qualityDiscrepency, 
+            _colorDiscrepency);
+      //solium prevent arg-line overflow    
+
+        emit proofVerification(_titleId, verification); 
+
+        return verification;    
+    }
 }

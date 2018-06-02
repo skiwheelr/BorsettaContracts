@@ -27,8 +27,9 @@ contract ERC721BasicToken is ERC721Basic {
   // Mapping from owner to number of owned token
     mapping (address => uint256) internal ownedTokensCount;
 
-  // Mapping from owner to operator approvals
-    mapping (address => mapping (address => bool)) internal operatorApprovals;
+  // Mapping from titleId to operator approvals
+  // update all required functions to reflect change
+    mapping (uint256 => mapping (address => bool)) internal operatorApprovals;
 
   /**
    * @dev Guarantees msg.sender is owner of the given token
@@ -108,15 +109,16 @@ contract ERC721BasicToken is ERC721Basic {
     }
 
   /**
+   * @todo change to setApprovalForOperator and change so that it only set operator approval for one titleId
    * @dev Sets or unsets the approval of a given operator
    * @dev An operator is allowed to transfer all tokens of the sender on their behalf
    * @param _to operator address to set the approval
    * @param _approved representing the status of the approval to be set
    */
-    function setApprovalForAll(address _operator, bool _approved) public {
+    function setApprovalForOperator(address _operator, uint256 _titleId, bool _approved) public {
         require(_operator != msg.sender);
-        operatorApprovals[msg.sender][_operator] = _approved;
-        emit ApprovalForAll(msg.sender, _operator, _approved);
+        operatorApprovals[_titleId][_operator] = _approved;
+        emit ApprovalForOperator(_titleId, _operator, _approved);
     }
 
   /**
@@ -125,8 +127,8 @@ contract ERC721BasicToken is ERC721Basic {
    * @param _operator operator address which you want to query the approval of
    * @return bool whether the given operator is approved by the given owner
    */
-    function isApprovedForAll(address _owner, address _operator) public view returns (bool){
-        return operatorApprovals[_owner][_operator];
+    function isApprovedForOperator(uint256 _titleId, address _operator) public view returns (bool){
+        return operatorApprovals[_titleId][_operator];
     }
 
   /**

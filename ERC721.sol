@@ -30,4 +30,5 @@ contract ERC721Metadata is ERC721Basic {
  * @dev See https://github.com/ethereum/EIPs/blob/master/EIPS/eip-721.md
  */
 contract ERC721 is ERC721Basic, ERC721Enumerable, ERC721Metadata {
+    
 }
